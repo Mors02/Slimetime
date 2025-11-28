@@ -9,7 +9,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField]
     float _speed;
 
-    [Range(50, 600)]
+    [Range(1, 600)]
     [SerializeField]
     float _jumpForce;
 
@@ -22,26 +22,40 @@ public class PlayerMovement : MonoBehaviour
 
     Rigidbody2D _rb;
 
-    bool _grounded, _jumpPressed;
+    bool _grounded, _jumpPressed, _facingRight;
 
     [SerializeField]
     Transform _groundCheck;
+
+    Animator _animator;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         this._rb = GetComponent<Rigidbody2D>();
         _jumpPercentage = _minJumpPercentage;
+        _facingRight = false;
+        _animator = GetComponent<Animator>();
     }
 
     public void Update()
     {
+        if (_facingRight && _movement.x > 0)
+            Flip();
+        else if (!_facingRight && _movement.x < 0)
+            Flip();
         //if we're in air we can descend
-        _rb.position = _rb.position + new Vector2(_movement.x * Time.deltaTime * _speed, _grounded ? 0 : Mathf.Min(0, _movement.y) * Time.deltaTime * _speed);
+        _rb.position = _rb.position + new Vector2(_movement.x * Time.deltaTime * _speed, _grounded || _jumpPressed ? 0 : Mathf.Min(0, _movement.y) * Time.deltaTime * _speed * 1.4f);
+        _animator.SetFloat("MovementX", _movement.x);
+        _animator.SetFloat("MovementY", _movement.y);
         if (_jumpPressed)
         {
             _jumpPercentage += Time.deltaTime;
-            Mathf.Clamp(_jumpPercentage, 0, _maxJumpTime);
+            //Mathf.Clamp(_jumpPercentage, 0, _maxJumpTime);
+            float percentage = Mathf.Clamp(_jumpPercentage / _maxJumpTime, 0, 1);
+            if (percentage < 1) {
+                _rb.AddForce(new Vector2(0, Mathf.Lerp(_jumpForce, 0, percentage)));    
+            }
         }
         //_rb.AddForce(new Vector2(_movement.x * Time.deltaTime * _speed, 0));
         // Debug.Log(_movement);
@@ -54,23 +68,14 @@ public class PlayerMovement : MonoBehaviour
 
     public void Jump(CallbackContext context)
     {
-        if (context.control.IsPressed())
-        {
-            _jumpPressed = true;
-        }
-        else
+        if (context.action.IsPressed())
         {
             if (_grounded)
-            {
-
-
-            
-                    Debug.Log(_jumpPercentage);
-                    float percentage = Mathf.Clamp(_jumpPercentage / _maxJumpTime, 0, 1);
-                    _rb.AddForce(new Vector2(0, _jumpForce * percentage));
-                    _jumpPercentage = _minJumpPercentage;
-                    _jumpPressed = false;
-            }
+                _jumpPressed = true;
+                _animator.SetTrigger("Jump");
+        } else {
+            _jumpPressed = false;
+            _jumpPercentage = _minJumpPercentage;
         }
   
     }
@@ -85,5 +90,10 @@ public class PlayerMovement : MonoBehaviour
     {
         if (collision.CompareTag("Ground"))
             _grounded = false;
+    }
+
+    public void Flip() {
+        this.transform.eulerAngles = new Vector2(0, _facingRight? 180 : 0);
+        _facingRight = !_facingRight;
     }
 }
