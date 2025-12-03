@@ -872,7 +872,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _speed: 5
-  _jumpForce: 75
+  _jumpForce: 70
   _maxJumpTime: 0.7
   _minJumpPercentage: 0.3
   _groundCheck: {fileID: 3448902}

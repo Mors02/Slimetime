@@ -29,6 +29,8 @@ public class PlayerMovement : MonoBehaviour
 
     Animator _animator;
 
+    float _lastYVelocity;
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -36,6 +38,7 @@ public class PlayerMovement : MonoBehaviour
         _jumpPercentage = _minJumpPercentage;
         _facingRight = false;
         _animator = GetComponent<Animator>();
+        _lastYVelocity = 0;
     }
 
     public void Update()
@@ -47,7 +50,9 @@ public class PlayerMovement : MonoBehaviour
         //if we're in air we can descend
         _rb.position = _rb.position + new Vector2(_movement.x * Time.deltaTime * _speed, _grounded || _jumpPressed ? 0 : Mathf.Min(0, _movement.y) * Time.deltaTime * _speed * 1.4f);
         _animator.SetFloat("MovementX", _movement.x);
-        _animator.SetFloat("MovementY", _movement.y);
+        //_animator.SetFloat("MovementY", _movement.y);
+        _animator.SetFloat("MovementY", _rb.linearVelocityY);
+        
         if (_jumpPressed)
         {
             _jumpPercentage += Time.deltaTime;
@@ -72,10 +77,11 @@ public class PlayerMovement : MonoBehaviour
         {
             if (_grounded)
                 _jumpPressed = true;
-                _animator.SetTrigger("Jump");
+                _animator.SetBool("Jumping", true);
         } else {
             _jumpPressed = false;
             _jumpPercentage = _minJumpPercentage;
+            _animator.SetBool("Jumping", false);
         }
   
     }
